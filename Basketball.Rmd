@@ -1,0 +1,56 @@
+---
+title: "Basketball"
+author: "Prabesh Paudel"
+date: "10/20/2021"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+data = read_csv("~/shots_data.csv")
+```
+
+```{r, warning=FALSE}
+data <- data %>%
+  mutate(
+    distance = sqrt(x^2 + y^2),
+    zone = ifelse(y > 7.8 & distance > 23.75, "NC3", ifelse(y <= 7.8 & distance > 22, "C3", "2PT")))
+
+
+shot_distribution = data %>% 
+  group_by(team, zone) %>%
+  summarise(count = n()) 
+
+shot_distribution <- shot_distribution %>%
+  mutate(percent = count / 280 * 100)
+shot_distribution
+```
+
+```{r, warning=FALSE}
+field_goals <- data %>%
+  group_by(team, zone) %>%
+  summarise(made = sum(fgmade),
+            attempts = n())
+
+field_goals_teams <- field_goals %>%
+  group_by(team) %>%
+  summarise(FGM = sum(made),
+            FGA = sum(attempts)) %>%
+  mutate(TPM = c(field_goals$made[field_goals$zone == "NC3"] + field_goals$made[field_goals$zone == "C3"]))
+
+field_goals_teams_eFG <- field_goals_teams %>%
+  mutate(eFG = ((FGM + (0.5 * TPM))/FGA))
+field_goals_teams_eFG
+```
+
+
+
+
+
